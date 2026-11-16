@@ -1,0 +1,104 @@
+# Publishes what SimpleEdit installs (signed: an official plugin): for each system an archive
+# `<name>-<tag>-<target>.tar.gz` holding plugin.json and bin/<program>, and
+# SHA256SUMS listing them. Push a tag `vX.Y.Z` equal to the version of
+# plugin.json to release.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # The program of plugin.json ("bin/<this>") and the binary of Cargo.toml.
+  PROGRAM: terminal
+  TAG: ${{ github.ref_name }}
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: |
+          VERSION=$(python3 -c 'import json; print(json.load(open("plugin.json"))["version"])')
+          if [ "v${VERSION}" != "$TAG" ]; then
+            echo "::error::Tag $TAG does not match the version in plugin.json (v${VERSION})"
+            exit 1
+          fi
+
+  build:
+    needs: check-version
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: x86_64-linux
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            name: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - run: cargo test
+      - run: cargo build --release --target ${{ matrix.target }}
+      - name: Package
+        env:
+          TARGET: ${{ matrix.target }}
+          NAME: ${{ matrix.name }}
+          # No macOS metadata files (._*) in the archive.
+          COPYFILE_DISABLE: "1"
+        run: |
+          mkdir -p "dist/plugin/bin"
+          cp plugin.json dist/plugin/
+          cp "target/${TARGET}/release/${PROGRAM}" dist/plugin/bin/
+          tar czf "${PROGRAM}-${TAG}-${NAME}.tar.gz" -C dist/plugin .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: plugin-${{ matrix.name }}
+          path: '*.tar.gz'
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Signing waits for a person: the `release` environment holds the key.
+    environment: release
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          merge-multiple: true
+      - run: sha256sum *.tar.gz > SHA256SUMS
+      # An official plugin: the editor refuses it unless SHA256SUMS is signed
+      # with the key of SimpleEdit's own releases.
+      - name: Sign checksums
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: |
+          if [ -z "$UPDATE_SIGNING_KEY" ]; then
+            echo "::error::UPDATE_SIGNING_KEY is not set — refusing to release an official plugin without SHA256SUMS.sig."
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$UPDATE_SIGNING_KEY" > key.pem
+          openssl pkeyutl -sign -inkey key.pem -rawin -in SHA256SUMS -out SHA256SUMS.sig
+          rm -f key.pem
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: |
+            *.tar.gz
+            SHA256SUMS
+            SHA256SUMS.sig
+          generate_release_notes: true
