@@ -1,14 +1,14 @@
 {
   "id": "simpleedit.terminal",
   "name": { "en": "Terminal", "fr": "Terminal" },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "api": 1,
   "description": {
     "en": "Shells in tabs under the editor, with their history, search, and paths a click away",
     "fr": "Des shells en onglets sous l'éditeur, avec leur historique, la recherche, et les chemins à un clic"
   },
-  "author": "SimpleEdit",
-  "repository": "simple-edit-app/plugin-terminal",
+  "author": "Ardoise Editor",
+  "repository": "ardoise-editor/plugin-terminal",
   "license": "MIT",
   "command": ["bin/terminal"],
   "events": ["active_file"],

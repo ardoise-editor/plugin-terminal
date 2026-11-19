@@ -1,4 +1,4 @@
-//! The Terminal plugin of SimpleEdit: shells in pseudo-terminals, in a
+//! The Terminal plugin of Ardoise: shells in pseudo-terminals, in a
 //! panel under the editor, one tab each. The editor draws their screens and
 //! sends back what is typed; the plugin runs them and keeps their history.
 

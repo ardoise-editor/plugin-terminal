@@ -1,4 +1,4 @@
-# Publishes what SimpleEdit installs (signed: an official plugin): for each system an archive
+# Publishes what Ardoise installs (signed: an official plugin): for each system an archive
 # `<name>-<tag>-<target>.tar.gz` holding plugin.json and bin/<program>, and
 # SHA256SUMS listing them. Push a tag `vX.Y.Z` equal to the version of
 # plugin.json to release.
@@ -82,7 +82,7 @@ jobs:
           merge-multiple: true
       - run: sha256sum *.tar.gz > SHA256SUMS
       # An official plugin: the editor refuses it unless SHA256SUMS is signed
-      # with the key of SimpleEdit's own releases.
+      # with the key of Ardoise's own releases.
       - name: Sign checksums
         env:
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
