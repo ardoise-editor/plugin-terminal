@@ -12,7 +12,7 @@ name = "terminal"
 path = "src/main.rs"
 
 [dependencies]
-ardoise-plugin = { path = "../plugin-sdk" }
+ardoise-plugin = { git = "https://github.com/ardoise-editor/plugin-sdk", tag = "v0.12.0" }
 serde_json = "1"
 portable-pty = "0.9.0"
 vt100 = "0.18.1"
