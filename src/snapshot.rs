@@ -1,6 +1,6 @@
 //! What a terminal shows, as the screen node the editor draws.
 
-use simpleedit_plugin::ui::{MouseMode, Run, Screen, TermColor};
+use ardoise_plugin::ui::{MouseMode, Run, Screen, TermColor};
 
 fn color(c: vt100::Color) -> Option<TermColor> {
     match c {
