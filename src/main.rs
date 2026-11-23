@@ -81,23 +81,39 @@ impl Terminals {
 
     fn view(&self) -> Node {
         let f = self.french;
-        let mut bar: Vec<Node> = self
-            .tabs
-            .iter()
-            .enumerate()
-            .map(|(i, tab)| {
-                button(tab.title.clone(), format!("tab:{i}")).button_style(if i == self.active {
+        // Each terminal is a tab with its own cross; the new one is a picto,
+        // and the search is a picto at the right of the panel.
+        let mut bar: Vec<Node> = Vec::new();
+        for (i, tab) in self.tabs.iter().enumerate() {
+            bar.push(button(tab.title.clone(), format!("tab:{i}")).button_style(
+                if i == self.active {
+                    ButtonStyle::Outline
+                } else {
+                    ButtonStyle::Ghost
+                },
+            ));
+            bar.push(
+                button(t(f, "close"), format!("close:{i}"))
+                    .button_style(ButtonStyle::Ghost)
+                    .icon("x"),
+            );
+        }
+        bar.push(
+            button(t(f, "new"), "new")
+                .button_style(ButtonStyle::Ghost)
+                .icon("plus"),
+        );
+        bar.push(fill());
+        bar.push(
+            button(t(f, "find"), "search")
+                .button_style(if self.search.is_some() {
                     ButtonStyle::Outline
                 } else {
                     ButtonStyle::Ghost
                 })
-            })
-            .collect();
-        bar.push(button("+", "new").button_style(ButtonStyle::Ghost));
-        if !self.tabs.is_empty() {
-            bar.push(button(t(f, "close"), "close").button_style(ButtonStyle::Ghost));
-            bar.push(button(t(f, "find"), "search").button_style(ButtonStyle::Ghost));
-        }
+                .icon("search")
+                .enabled(!self.tabs.is_empty()),
+        );
         let mut body = vec![row(bar).spacing(4.0)];
         if let Some(query) = &self.search {
             body.push(
@@ -264,11 +280,6 @@ impl Plugin for Terminal {
                 let dir = self.start_dir();
                 self.new_tab(host, &dir);
             }
-            "close" => {
-                let mut s = self.shared();
-                let active = s.active;
-                s.close(active);
-            }
             "search" => {
                 let mut s = self.shared();
                 s.search = if s.search.is_some() {
@@ -295,6 +306,15 @@ impl Plugin for Terminal {
                         host.notify(t(s.french, "not_found"));
                     }
                 }
+            }
+            action if action.starts_with("close:") => {
+                let Some(i) = action
+                    .strip_prefix("close:")
+                    .and_then(|i| i.parse::<usize>().ok())
+                else {
+                    return;
+                };
+                self.shared().close(i);
             }
             action => {
                 let Some(i) = action
@@ -352,6 +372,10 @@ mod tests {
         let page = serde_json::to_value(s.view()).unwrap();
         let text = page.to_string();
         assert!(text.contains("\"type\":\"screen\"") && text.contains("tab:1"));
+        // A cross on each tab, no Close button, the search as a picto at the right.
+        assert!(text.contains("close:0") && text.contains("close:1"));
+        assert!(!text.contains("\"action\":\"close\""));
+        assert!(text.contains("\"icon\":\"search\""));
         s.close(1);
         assert_eq!((s.tabs.len(), s.active), (1, 0));
         s.close(0);
