@@ -4,6 +4,7 @@ pub fn t(french: bool, key: &str) -> &'static str {
     let (en, fr) = match key {
         "local" => ("Local", "Local"),
         "close" => ("Close", "Fermer"),
+        "new" => ("New terminal", "Nouveau terminal"),
         "find" => ("Find", "Chercher"),
         "find_hint" => ("Find in the terminal", "Chercher dans le terminal"),
         "none" => ("No terminal: + opens one", "Aucun terminal : + en ouvre un"),
@@ -28,6 +29,7 @@ mod tests {
         for key in [
             "local",
             "close",
+            "new",
             "find",
             "find_hint",
             "none",

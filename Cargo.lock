@@ -10,8 +10,8 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "ardoise-plugin"
-version = "0.12.0"
-source = "git+https://github.com/ardoise-editor/plugin-sdk?tag=v0.12.0#32da0398b3a29b97421af71d4a3defd6da14edd8"
+version = "0.14.0"
+source = "git+https://github.com/ardoise-editor/plugin-sdk?tag=v0.14.0#1717de791855815bbbba54321d782290681d482d"
 dependencies = [
  "serde",
  "serde_json",
@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "ardoise-terminal"
-version = "1.0.1"
+version = "1.1.0"
 dependencies = [
  "ardoise-plugin",
  "libc",

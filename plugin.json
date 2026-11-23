@@ -1,7 +1,7 @@
 {
   "id": "ardoise.terminal",
   "name": { "en": "Terminal", "fr": "Terminal" },
-  "version": "1.0.1",
+  "version": "1.1.0",
   "api": 1,
   "description": {
     "en": "Shells in tabs under the editor, with their history, search, and paths a click away",
