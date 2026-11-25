@@ -83,17 +83,22 @@ jobs:
       - run: sha256sum *.tar.gz > SHA256SUMS
       # An official plugin: the editor refuses it unless SHA256SUMS is signed
       # with the key of Ardoise's own releases.
+      # Two signatures while that key changes: SHA256SUMS.sig (UPDATE_SIGNING_KEY)
+      # for Ardoise up to 2.8, SHA256SUMS.sig3 (UPDATE_SIGNING_KEY_V3) since 2.9.
       - name: Sign checksums
         env:
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+          UPDATE_SIGNING_KEY_V3: ${{ secrets.UPDATE_SIGNING_KEY_V3 }}
         run: |
-          if [ -z "$UPDATE_SIGNING_KEY" ]; then
-            echo "::error::UPDATE_SIGNING_KEY is not set — refusing to release an official plugin without SHA256SUMS.sig."
+          if [ -z "$UPDATE_SIGNING_KEY" ] || [ -z "$UPDATE_SIGNING_KEY_V3" ]; then
+            echo "::error::UPDATE_SIGNING_KEY and UPDATE_SIGNING_KEY_V3 must both be set — refusing to release an official plugin without its two signatures."
             exit 1
           fi
           umask 077
           printf '%s\n' "$UPDATE_SIGNING_KEY" > key.pem
           openssl pkeyutl -sign -inkey key.pem -rawin -in SHA256SUMS -out SHA256SUMS.sig
+          printf '%s\n' "$UPDATE_SIGNING_KEY_V3" > key.pem
+          openssl pkeyutl -sign -inkey key.pem -rawin -in SHA256SUMS -out SHA256SUMS.sig3
           rm -f key.pem
       - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -101,4 +106,5 @@ jobs:
             *.tar.gz
             SHA256SUMS
             SHA256SUMS.sig
+            SHA256SUMS.sig3
           generate_release_notes: true
